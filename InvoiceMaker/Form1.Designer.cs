@@ -33,8 +33,6 @@
             this.FileExplorerBtn = new System.Windows.Forms.Button();
             this.OpencsvFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.button1 = new System.Windows.Forms.Button();
-            this.monthCalendar1 = new System.Windows.Forms.MonthCalendar();
-            this.label2 = new System.Windows.Forms.Label();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
@@ -86,33 +84,18 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // monthCalendar1
-            // 
-            this.monthCalendar1.Location = new System.Drawing.Point(12, 215);
-            this.monthCalendar1.Name = "monthCalendar1";
-            this.monthCalendar1.TabIndex = 4;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 183);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(237, 23);
-            this.label2.TabIndex = 5;
-            this.label2.Text = "Pick Week Commencing Date";
-            // 
             // richTextBox1
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(323, 248);
+            this.richTextBox1.Location = new System.Drawing.Point(12, 243);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(469, 215);
+            this.richTextBox1.Size = new System.Drawing.Size(780, 215);
             this.richTextBox1.TabIndex = 6;
             this.richTextBox1.Text = "";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(319, 183);
+            this.label3.Location = new System.Drawing.Point(8, 178);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(78, 23);
             this.label3.TabIndex = 7;
@@ -120,10 +103,10 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(323, 215);
+            this.progressBar1.Location = new System.Drawing.Point(12, 210);
             this.progressBar1.Maximum = 1400;
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(469, 23);
+            this.progressBar1.Size = new System.Drawing.Size(780, 23);
             this.progressBar1.Step = 1;
             this.progressBar1.TabIndex = 8;
             this.progressBar1.Value = 1;
@@ -176,8 +159,6 @@
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.richTextBox1);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.monthCalendar1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.FileExplorerBtn);
             this.Controls.Add(this.label1);
@@ -200,8 +181,6 @@
         private System.Windows.Forms.Button FileExplorerBtn;
         private System.Windows.Forms.OpenFileDialog OpencsvFileDialog;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.MonthCalendar monthCalendar1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ProgressBar progressBar1;

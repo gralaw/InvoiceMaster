@@ -7,6 +7,7 @@ using CsvHelper;
 using System.Runtime.InteropServices;
 using Excel = Microsoft.Office.Interop.Excel;
 using System.Drawing;
+using System.Globalization;
 
 
 namespace InvoiceMaker
@@ -14,6 +15,7 @@ namespace InvoiceMaker
     public partial class Form1 : Form
     {
         List<InvoiceLine> callList = new List<InvoiceLine>();
+        
         public Form1()
         {
             InitializeComponent();
@@ -35,7 +37,8 @@ namespace InvoiceMaker
             processCSVtoDatabase(OpencsvFileDialog.FileName);
             populateDatabase();
             countMinutes();
-            constructExcelOutput();
+            string commdate = weekCommencingDate(OpencsvFileDialog.FileName);
+            constructExcelOutput(commdate);
             writeMessage("Processing Complete");
         }
 
@@ -43,8 +46,7 @@ namespace InvoiceMaker
         {
             TextReader textReader = new StreamReader(inputFilePath);
             var csv = new CsvReader(textReader);
-            var records = csv.GetRecords<InputLine>();
-            string weekCommencing = monthCalendar1.SelectionRange.Start.ToShortDateString();
+            var records = csv.GetRecords<InputLine>();            
 
             int count = 0;
             progressBar1.Maximum = 1400;
@@ -60,9 +62,10 @@ namespace InvoiceMaker
 
                 line.firstname = record.client_fname;
                 line.lastname = record.client_sname;
-                line.weekCommencing = weekCommencing;
+                //line.weekCommencing = master_weekcommencing.ToShortDateString();
+                
                 line.minutesThisCall = (int)span.TotalMinutes;
-                line.providerID = "123456";
+                line.providerID = "1136762";
                 var query =
                     (from c in db.references
                      where c.firstname == line.firstname && c.lastname == line.lastname
@@ -139,8 +142,31 @@ namespace InvoiceMaker
             }
 
         }
+        public string weekCommencingDate(string inputFilePath)
+        {
+            DateTime master_weekcommencing = DateTime.Now;
+            TextReader textReader = new StreamReader(inputFilePath);
 
-        private void constructExcelOutput()
+            var csv = new CsvReader(textReader);
+            var records = csv.GetRecords<InputLine>();
+
+            // is this weekcommencing the base date?
+            writeMessage("Scanning for week commencing date.");
+
+            foreach (var record in records)
+            {
+                var date = DateTime.Parse(record.booking_date, new CultureInfo("en-GB", true));
+                if (date < master_weekcommencing)
+                {
+                    master_weekcommencing = date;
+                }
+            }
+            textReader.Close();
+            writeMessage("Week Commencing Date is " + master_weekcommencing.ToShortDateString());
+            return master_weekcommencing.ToShortDateString(); 
+        }
+
+        private void constructExcelOutput(string wkCommencing)
         {
             writeMessage("Constructing Excel Workbook");
             Excel.Application xlApp = new
@@ -168,6 +194,7 @@ namespace InvoiceMaker
             xlWorkSheet.Cells[1, 8] = "Delete";
             int row = 2;
 
+
             using (DataClasses1DataContext dc = new DataClasses1DataContext())
             {
                 IQueryable<invoiceline> invoicelines =
@@ -177,7 +204,7 @@ namespace InvoiceMaker
                 foreach (var line in invoicelines)
                 {
                     xlWorkSheet.Cells[row, 1] = "1136762";
-                    xlWorkSheet.Cells[row, 2] = monthCalendar1.SelectionRange.Start.ToString("dd/MM/yyyy");
+                    xlWorkSheet.Cells[row, 2] = "'" + wkCommencing;
                     xlWorkSheet.Cells[row, 3] = line.ref_number;
                     xlWorkSheet.Cells[row, 4] = line.hoursthisperiod;
                     xlWorkSheet.Cells[row, 7] = line.firstname;
@@ -186,7 +213,7 @@ namespace InvoiceMaker
                 }
 
             }
-            string savefile = textBox2.Text + "\\PEP_" + monthCalendar1.SelectionRange.Start.ToString("ddMMyyyy") + ".xls";
+            string savefile = textBox2.Text + "\\PEP_" + wkCommencing.Replace(@"/", string.Empty) + ".xls";
             xlWorkBook.SaveAs(savefile, Excel.XlFileFormat.xlWorkbookNormal, misValue, misValue, misValue, misValue, Excel.XlSaveAsAccessMode.xlExclusive, misValue, misValue, misValue, misValue, misValue);
             xlWorkBook.Close(true, misValue, misValue);
             xlApp.Quit();
@@ -195,7 +222,7 @@ namespace InvoiceMaker
             Marshal.ReleaseComObject(xlWorkBook);
             Marshal.ReleaseComObject(xlApp);
 
-            MessageBox.Show("Excel file created. You can find the file at " + savefile);
+            writeMessage("Excel file created. You can find the file at " + savefile);
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -214,18 +241,23 @@ namespace InvoiceMaker
 
         private void writeMessage(string msg)
         {
+            DateTime now = DateTime.Now;
+            string msgline = now.ToLongTimeString() + "   " + msg;
+
             if (msg.StartsWith("Error"))
             {
+                msgline = now.ToLongTimeString() + " " + msg;
                 int length = richTextBox1.TextLength;  // at end of text
-                richTextBox1.AppendText(msg + "\r\n");
+                richTextBox1.AppendText(msgline + "\r\n");
                 richTextBox1.SelectionStart = length;
                 richTextBox1.SelectionLength = msg.Length;
                 richTextBox1.SelectionColor = Color.Red;
             }
             else
             {
-                richTextBox1.AppendText(msg + "\r\n");
+                richTextBox1.AppendText(msgline + "\r\n");
             }
+            richTextBox1.Refresh();
         }
 
         private void Form1_Load(object sender, EventArgs e)
