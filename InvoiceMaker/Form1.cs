@@ -34,7 +34,10 @@ namespace InvoiceMaker
         private void button1_Click(object sender, EventArgs e)
         {
             writeMessage("Processing Started");
-            processCSVtoDatabase(OpencsvFileDialog.FileName);
+            if(processCSVtoDatabase(OpencsvFileDialog.FileName) == false)
+            {
+                return;
+            }
             populateDatabase();
             countMinutes();
             string commdate = weekCommencingDate(OpencsvFileDialog.FileName);
@@ -42,52 +45,59 @@ namespace InvoiceMaker
             writeMessage("Processing Complete");
         }
 
-        private void processCSVtoDatabase(string inputFilePath)
+        private bool processCSVtoDatabase(string inputFilePath)
         {
             TextReader textReader = new StreamReader(inputFilePath);
             var csv = new CsvReader(textReader);
-            var records = csv.GetRecords<InputLine>();            
-
-            int count = 0;
-            progressBar1.Maximum = 1400;
-            DataClasses1DataContext db = new DataClasses1DataContext();
-            foreach (var record in records)
+            try
             {
+                var records = csv.GetRecords<InputLine>();
 
-                InvoiceLine line = new InvoiceLine();
-                // Work out how many mins this call is for
-                var startTime = DateTime.ParseExact(record.time_from, "H:mm", null, System.Globalization.DateTimeStyles.None);
-                var endTime = DateTime.ParseExact(record.time_to, "H:mm", null, System.Globalization.DateTimeStyles.None);
-                TimeSpan span = endTime.Subtract(startTime);
-
-                line.firstname = record.client_fname;
-                line.lastname = record.client_sname;
-                //line.weekCommencing = master_weekcommencing.ToShortDateString();
-                
-                line.minutesThisCall = (int)span.TotalMinutes;
-                line.providerID = "1136762";
-                var query =
-                    (from c in db.references
-                     where c.firstname == line.firstname && c.lastname == line.lastname
-                     select new { c.ref_number, c.customer }).SingleOrDefault();
-                if (query == null)
+                int count = 0;
+                DataClasses1DataContext db = new DataClasses1DataContext();
+                foreach (var record in records)
                 {
-                    string errorString = "Error: " + line.firstname + " " + line.lastname + " does not have an entry in the reference database table.";
-                    writeMessage(errorString);
-                }
-                else if (query.customer == 0)
-                {
-                    line.asdReference = query.ref_number;
-                    callList.Add(line);
-                }
 
-                count++;
-                progressBar1.PerformStep();
+                    InvoiceLine line = new InvoiceLine();
+                    // Work out how many mins this call is for
+                    var startTime = DateTime.ParseExact(record.time_from, "H:mm", null, System.Globalization.DateTimeStyles.None);
+                    var endTime = DateTime.ParseExact(record.time_to, "H:mm", null, System.Globalization.DateTimeStyles.None);
+                    TimeSpan span = endTime.Subtract(startTime);
 
+                    line.firstname = record.client_fname;
+                    line.lastname = record.client_sname;
+                    //line.weekCommencing = master_weekcommencing.ToShortDateString();
+
+                    line.minutesThisCall = (int)span.TotalMinutes;
+                    line.providerID = "1136762";
+                    var query =
+                        (from c in db.references
+                         where c.firstname == line.firstname && c.lastname == line.lastname
+                         select new { c.ref_number, c.customer }).SingleOrDefault();
+                    if (query == null)
+                    {
+                        string errorString = "Error: " + line.firstname + " " + line.lastname + " does not have an entry in the reference database table.";
+                        writeMessage(errorString);
+                    }
+                    else if (query.customer == 0)
+                    {
+                        line.asdReference = query.ref_number;
+                        callList.Add(line);
+                    }
+
+                    count++;
+
+                }
+                writeMessage(count.ToString() + " Items processed from csv file");
+                textReader.Close();
+                db.Dispose();
+                return true;
             }
-            writeMessage(count.ToString() + " Items processed from csv file");
-            textReader.Close();
-            db.Dispose();
+            catch (CsvHelperException ex)
+            {
+                writeMessage("Error: " + inputFilePath + " " + ex );
+                return false;
+            }
         }
 
         private void populateDatabase()
